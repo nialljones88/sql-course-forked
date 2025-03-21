@@ -32,13 +32,20 @@ SELECT TOP 10
 FROM airports a;
 
 -- How many airports are in the airports table?
-
+SELECT count(*) FROM 	airports a;
 -- How many frequencies are in the airport_frequencies table?
-
+SELECT count(*) FROM 	airport_frequencies a;
 -- How many airports of each type?
-
+SELECT [type], count(id) as NumberofAirports
+FROM 	airports a
+GROUP by TYPE
+order by NumberofAirports desc
 -- Is the airport.ident column unique? i.e. there are no duplicate values
-
+Select a.ident, COUNT(*) NumberofAirports
+FROM airports as a 
+GROUP BY a.ident
+HAVING COUNT(*) >1
+ORDER BY NumberofAirports desc
 /*
 Do a data quality check on the airports_frequencies table
 Are there any orphan rows (frequencies without a matching airports)?
@@ -46,10 +53,27 @@ You can do this is several ways: LEFT JOIN, NOT IN, NOT EXISTS,...
 */
 -- left join approach
 
+SELECT count(*)
+FROM airport_frequencies af
+LEFT JOIN airports a ON af.airport_ident = a.ident
+WHERE a.ident IS NULL;
 -- NOT EXISTS approach	
 
+SELECT count(*)
+FROM airport_frequencies af
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM airports a
+    WHERE af.airport_ident = a.ident
+);
 -- NOT IN approach	
 
+SELECT count(*)
+FROM airport_frequencies af
+WHERE af.airport_ident NOT IN (
+    SELECT a.ident
+    FROM airports a
+);
 /*
 1. List airports.  Show the following columns: ident, iata_code, name, latitude_deg, longitude_deg 
 2. Filter to those airports
@@ -59,7 +83,17 @@ You can do this is several ways: LEFT JOIN, NOT IN, NOT EXISTS,...
   (c) that have a latitude between 49 and 54 degrees
 3. Order from the most northern airports to most southern airports
 */
-
+SELECT 
+    a.ident,
+    a.iata_code,
+    a.name,
+    a.latitude_deg,
+    a.longitude_deg
+FROM airports a
+WHERE a.[type] = 'large_airport'
+AND a.iso_country IN ('GB', 'FR')
+AND a.latitude_deg BETWEEN 49 AND 54
+ORDER BY a.latitude_deg DESC;
 
 /*
 List the iso_country of the 5 countries with the most airports 
